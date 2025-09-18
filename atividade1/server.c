@@ -182,19 +182,18 @@ int main(int argc, char **argv) {
                     else if (strcmp(op, "MUL") == 0 && arg1 != NULL && arg2 != NULL){ // MUL
                             result = atof(arg1) * atof(arg2);
                             snprintf(buf, sizeof(buf), "[RESPOSTA] OK %.6f\n", result);
-                            
-
                     }
+
                     else if (strcmp(op, "DIV") == 0 && arg1 != NULL && arg2 != NULL){ // DIV
                             if (atof(arg2) != 0.0) {
                                 result = atof(arg1) / atof(arg2);
                                 snprintf(buf, sizeof(buf), "[RESPOSTA] OK %.6f\n", result);
-                               
                             }
                             else {
                                 snprintf(buf, sizeof(buf), "[RESPOSTA] ERR EZDV divisao_por_zero\n");
                             }
                     }
+                    
                     else if (strcmp(op, "QUIT") == 0){ // QUIT
                             printf("[SERVIDOR] Cliente fd=%d desconectou.\n", fd);
                             close(fd);
