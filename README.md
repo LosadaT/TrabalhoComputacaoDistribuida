@@ -1,6 +1,6 @@
 # TrabalhoComputacaoDistribuida
 ## Integrantes:
-Francisco Losada Totaro - 10364673
+Francisco Losada Totaro - 10364673 <br>
 Pedro Henrique Lanfredi Moreiras - 10441998
 
 ## Compilar/Executar:
