@@ -1,10 +1,5 @@
-// chat_client.c
-// Cliente do "mini-chat" TCP. Usa select() para ler simultaneamente:
-// - stdin (teclado) -> envia ao servidor
-// - socket -> imprime mensagens vindas do servidor
-//
-// Compilar: gcc -Wall -Wextra -O2 -o chat_client chat_client.c
-// Executar: ./chat_client 127.0.0.1 5000
+// Compilar: gcc -Wall -Wextra -O2 -o client client.c
+// Executar: ./client 127.0.0.1 5000
 
 #include <stdio.h>      // printf, perror, fgets
 #include <stdlib.h>     // exit, atoi

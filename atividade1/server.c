@@ -18,30 +18,26 @@ static void die(const char *msg) {
 }
 
 // Envia 'msg' para todos os clientes conectados, exceto 'sender_fd' (quem enviou).
-static void broadcast(int *clients, int max_i, int sender_fd, const char *msg, size_t len) {
-    for (int i = 0; i <= max_i; i++) {
-        int fd = clients[i];
-        if (fd >= 0 && fd != sender_fd) {
-            // send(int sockfd, const void *buf, size_t len, int flags)
-            //  - sockfd: descritor do socket de destino
-            //  - buf:    ponteiro para dados a enviar
-            //  - len:    tamanho em bytes dos dados
-            //  - flags:  normalmente 0 (sem flags especiais)
-            ssize_t n = send(fd, msg, len, 0);
-            if (n < 0) {
-                // Ex.: cliente pode ter desconectado; apenas reportamos
-                perror("send");
-            }
-        }
-    }
-}
+// static void broadcast(int *clients, int max_i, int sender_fd, const char *msg, size_t len) {
+//     for (int i = 0; i <= max_i; i++) {
+//         int fd = clients[i];
+//         if (fd >= 0 && fd != sender_fd) {
+//             // send(int sockfd, const void *buf, size_t len, int flags)
+//             //  - sockfd: descritor do socket de destino
+//             //  - buf:    ponteiro para dados a enviar
+//             //  - len:    tamanho em bytes dos dados
+//             //  - flags:  normalmente 0 (sem flags especiais)
+//             ssize_t n = send(fd, msg, len, 0);
+//             if (n < 0) {
+//                 // Ex.: cliente pode ter desconectado; apenas reportamos
+//                 perror("send");
+//             }
+//         }
+//     }
+// }
 
 int main(int argc, char **argv) {
-    char *op;
-    char *arg1;
-    char *arg2;
-    const char delimiter[] = " ";
-    float result;
+    
 
     if (argc != 2) {
         fprintf(stderr, "Use %s <porta>\nEx %s 5001", argv[0], argv[0]);
@@ -64,7 +60,6 @@ int main(int argc, char **argv) {
     addr.sin_port = htons((uint16_t)port);
     addr.sin_addr.s_addr = htonl(INADDR_ANY); // aceita conn de qq. interface
 
-
     //bind
     if (bind(listen_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) 
         die("bind");
@@ -73,7 +68,7 @@ int main(int argc, char **argv) {
     if (listen(listen_fd, 8) < 0) //backlog (fila de conns pendentes)
         die("listen");
 
-    printf("\n***Servidor ouvindo em 0.0.0.0:%d***\n\n", port);
+    printf("\n*** Servidor ouvindo em 0.0.0.0:%d ***\n\n", port);
     
     int clients[MAX_CLIENTS];
 
@@ -142,6 +137,11 @@ int main(int argc, char **argv) {
 
         // Verifica dados vindos dos clientes existentes
         for (int i = 0; i <= max_i; i++) {
+            char *op;
+            char *arg1;
+            char *arg2;
+            const char delimiter[] = " ";
+            float result;
             int fd = clients[i];
             if (fd < 0) continue;
             if (FD_ISSET(fd, &rset)) {
@@ -158,46 +158,51 @@ int main(int argc, char **argv) {
                     FD_CLR(fd, &allset);
                     clients[i] = -1;
                 } else {
-                    //buf[n] = '\0'; // garantir string
-                    // Simples broadcast
+                    buf[n] = '\0';
+                    char *newline = strchr(buf, '\n');
+                    if (newline) {
+                         *newline = '\0';
+                    }
+
                     op = strtok(buf, delimiter);
-                    for (int i = 0; i < 3; i++) {
+                    for (int i = 0; i < 2; i++) {
                         if (i == 0) arg1 = strtok(NULL, delimiter);
                         if (i == 1) arg2 = strtok(NULL, delimiter);
                     }
-                    switch (op[0]) {
-                        case 'A': // ADD
+                    if (strcmp(op, "ADD") == 0 && arg1 != NULL && arg2 != NULL){ // ADD
                             result = atof(arg1) + atof(arg2);
-                            snprintf(buf, sizeof(buf), "OK %f\n", result);
+                            snprintf(buf, sizeof(buf), "[RESPOSTA] OK %.6f\n", result);     
+                    }
 
-                            break;
-                        case 'S': // SUB
+                    else if (strcmp(op, "SUB") == 0 && arg1 != NULL && arg2 != NULL){ // SUB
                             result = atof(arg1) - atof(arg2);
-                            snprintf(buf, sizeof(buf), "OK %f\n", result);
+                            snprintf(buf, sizeof(buf), "[RESPOSTA] OK %.6f\n", result); 
+                    }
 
-                            break;
-                        case 'M': // MUL
+                    else if (strcmp(op, "MUL") == 0 && arg1 != NULL && arg2 != NULL){ // MUL
                             result = atof(arg1) * atof(arg2);
-                            snprintf(buf, sizeof(buf), "OK %f\n", result);
+                            snprintf(buf, sizeof(buf), "[RESPOSTA] OK %.6f\n", result);
+                            
 
-                            break;
-                        case 'D': // DIV
+                    }
+                    else if (strcmp(op, "DIV") == 0 && arg1 != NULL && arg2 != NULL){ // DIV
                             if (atof(arg2) != 0.0) {
                                 result = atof(arg1) / atof(arg2);
-                                snprintf(buf, sizeof(buf), "OK %f\n", result);
+                                snprintf(buf, sizeof(buf), "[RESPOSTA] OK %.6f\n", result);
+                               
                             }
                             else {
-                                snprintf(buf, sizeof(buf), "ERR EZDV divisao_por_zero\n");
+                                snprintf(buf, sizeof(buf), "[RESPOSTA] ERR EZDV divisao_por_zero\n");
                             }
-                            break;
-                        case 'Q': // QUIT
+                    }
+                    else if (strcmp(op, "QUIT") == 0){ // QUIT
                             printf("[SERVIDOR] Cliente fd=%d desconectou.\n", fd);
                             close(fd);
                             FD_CLR(fd, &allset);
                             clients[i] = -1;
-                            break;
-                        default:
-                            snprintf(buf, sizeof(buf), "ERR EINV operacao_desconhecida\n");
+                    }
+                    else {
+                            snprintf(buf, sizeof(buf), "[RESPOSTA] ERR EINV operacao_invalida\n");
                             send(fd, buf, strlen(buf), 0);
                             break;
                     }
